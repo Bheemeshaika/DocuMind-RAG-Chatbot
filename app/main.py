@@ -1,14 +1,24 @@
-from fastapi import FastAPI, UploadFile, File, Request
+from fastapi import FastAPI, UploadFile, File
 from typing import List
+from pydantic import BaseModel
+
 from app.pdf_loader import load_uploaded_pdfs
 from app.vector_store import create_vector_db
 from app.rag import answer_query
 
-app = FastAPI(title="Documind RAG API")
 
+app = FastAPI(
+    title="Documind RAG API",
+    description="Upload PDFs and ask questions using RAG",
+    version="1.0.0"
+)
 
-@app.post("/upload")
+class QuestionRequest(BaseModel):
+    question: str
+
+@app.post("/upload", summary="Upload and index PDF files")
 async def upload_pdfs(files: List[UploadFile] = File(...)):
+   
     try:
         docs = load_uploaded_pdfs(files)
         create_vector_db(docs)
@@ -17,12 +27,8 @@ async def upload_pdfs(files: List[UploadFile] = File(...)):
         return {"error": str(e)}
 
 
-@app.post("/ask")
-async def ask_question(request: Request):
-    data = await request.json()
-    question = data.get("question")
+@app.post("/ask", summary="Ask a question from uploaded PDFs")
+async def ask_question(payload: QuestionRequest):
 
-    if not question:
-        return {"answer": "No question provided"}
-
-    return {"answer": answer_query(question)}
+    answer = answer_query(payload.question)
+    return {"answer": answer}
