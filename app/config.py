@@ -6,3 +6,4 @@ FAISS_DIR = os.path.join(BASE_DIR, "faiss_db")
 
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(FAISS_DIR, exist_ok=True)
+
